@@ -93,10 +93,15 @@ app.get('/', async (req, res) => {
 
 app.get("/:id", async (req, res) => {
     const product = await Blogs.findOne({ _id: req.params.id }).populate("comments");
-    if (product) {
-        res.send(product);
-    } else {
-        res.status(404).send({ message: "Product not found" });
+    try {
+        if (product) {
+            res.send(product);
+        } else {
+            res.status(404).send({ message: "Product not found" });
+        }
+    }
+    catch {
+        res.status(500).json({ message: "server error" })
     }
 });
 
@@ -125,7 +130,7 @@ app.post('/create-post', upload.single("image"), async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error })
     }
-    res.send('hello from simple server :)')
+    // res.send('hello from simple server :)')
 
 })
 
