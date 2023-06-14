@@ -9,6 +9,8 @@ import Comments from './schema/commentSchema.js'
 import cors from 'cors'
 import jwt from "jsonwebtoken";
 import multer from "multer";
+import userRouter from "./routes/userRoutes.js";
+import blogRouter from "./routes/blogRoutes.js";
 const upload = multer({ dest: "uploads/" })
 
 dotenv.config({ path: "./config.env" });
@@ -23,6 +25,11 @@ mongoose.connect(process.env.DATABASE)
     .then((res) => console.log('> Database Connected...'.bgCyan))
     .catch(err => console.log(`> Error while connecting to mongoDB : ${err.message}`.underline.bgRed))
 
+
+
+
+app.use("/user", userRouter)
+app.use("/user/blog", blogRouter)
 
 app.get('/comments', async (req, res) => {
     try {
@@ -105,165 +112,14 @@ app.get("/:id", async (req, res) => {
     }
 });
 
-app.post('/create-post', upload.single("image"), async (req, res) => {
-    // const { title, image, content } = req.body
-    const title = req.body.title
-    const image = req.file ? req.file.filename : 'no image'
-    const content = req.body.content
-    // console.log(image)
-    // console.log(req.file)
-    // console.log(title)
-    // console.log(content)
-
-    try {
-        if (!title || !content) {
-            return res.status(403).json({ message: "post field is empty" })
-        }
-        const create_new_post = new Blogs({ title, image, content });
-        const newPost = await create_new_post.save();
-        if (newPost) {
-            return res.status(201).json({ success: "new post successfully created", newPost });
-        }
-        else {
-            return res.status(404).json({ success: "failed to create post" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error })
-    }
-    // res.send('hello from simple server :)')
-
-})
-
-app.post('/store-post-to-each-user', async (req, res) => {
-    // console.log("pro req", req.body)
-    try {
-        const product = await newUser.updateOne({ _id: req.body.userId.userId }, { $addToSet: { blogs: req.body.blogId } });
-
-        if (product) {
-            res.status(200).send("blog successfully added");
-        } else {
-            res.status(404).send({ message: "blog id not found" });
-        }
-    } catch (error) {
-        res.status(500).send({ message: "server error", error });
-    }
-})
-
-// get user
-app.post('/get-user', async (req, res) => {
-    const userId = req.body.userId
-    try {
-        const data = await newUser.findOne({ _id: userId }).populate("blogs")
-        if (data) {
-            res.status(201).send({ message: "get product successful", data: data });
-        } else {
-            res.status(404).send({ message: "Product failed" });
-        }
-    } catch (error) {
-        res.status(500).send({ message: "server error", error });
-    }
-})
-// user update post
-app.put('/update/:id', upload.single("image"), async (req, res) => {
-    const { id, blog_index } = req.params
-    // const { title, image, content } = req.body
-    const title = req.body.title
-    const image = req.file ? req.file.filename : null
-    const content = req.body.content
-    // console.log(req.body)
-    // console.log(req.file)
-    try {
-        await Blogs.findByIdAndUpdate({ _id: id }, { title: title, image: image, content: content }, { new: true })
 
 
-            .then((result) => {
-                res.status(200).json(result)
-            })
-            .catch((error) => {
-                res.status(499).json(error)
-            })
-
-    } catch (error) {
-        res.status(500).json({ error: error })
-    }
-
-})
-//user delete post
-app.delete('/:id/:product_index', async (req, res) => {
-    const { id, product_index } = req.params
-    // console.log(req.params)
-    newUser.findOne({ _id: new mongoose.Types.ObjectId(id) })
-        .then((result) => {
-            const book = result.blogs[product_index]
-            newUser.findOneAndUpdate(
-                { _id: new mongoose.Types.ObjectId(id) },
-                {
-                    $pull: {
-                        blogs: book
-                    }
-                },
-                { new: true }
-            )
-                .then((result) => {
-                    // console.log("document", result)
-                    res.status(200).send({ message: "user", result }).end();
-                })
-            // console.log("success", result)
-        })
-})
 
 
-//user login
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(403).json({ message: "user field is empty" })
-    }
-    try {
-        const userAvailable = await newUser.findOne({
-            email: email,
-            password: password,
-        });
 
-        // console.log('userAvailable', userAvailable);
-        if (userAvailable) {
-            if (
-                password === userAvailable.password &&
-                email === userAvailable.email
-            ) {
-                const token = await userAvailable.generateAuthToken();
 
-                // const token = jwt.sign(
-                //   { _id: userAvailable._id },
-                //   process.env.JWT_KEY,
-                //   { expiresIn: "1h" }
-                // );
 
-                res.cookie("jwtoken", token, {
-                    expires: new Date(Date.now() + 2592000000),
-                    httpOnly: true,
-                });
-
-                res.status(200).json({
-                    message: "login successful",
-                    userAvailable: userAvailable,
-                    token,
-                    userId: userAvailable._id,
-                    username: 'Suraj Surwase'
-                });
-            } else {
-                res.status(401).json({ message: "email or password incorrect" });
-            }
-        }
-
-        else {
-            res.status(404).json({ message: "user not found" });
-        }
-    } catch (err) {
-        res.send({ message: err });
-    }
-});
 
 //admin update post // not in use ignore this
 // app.put('/admin/update/:id/:blog_id', async (req, res) => {
