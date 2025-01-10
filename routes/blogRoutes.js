@@ -13,6 +13,7 @@ blogRouter.post('/create-post', upload.single("image"), async (req, res) => {
     const content = req.body.content
     const category = req.body.category
 
+
     try {
         if (!title || !content) {
             return res.status(403).json({ message: "post field is empty" })
@@ -48,6 +49,7 @@ blogRouter.post('/store-post-to-each-user', async (req, res) => {
 //user delete post
 blogRouter.delete('/:id/:product_index', async (req, res) => {
     const { id, product_index } = req.params
+
     // console.log(req.params)
     newUser.findOne({ _id: new mongoose.Types.ObjectId(id) })
         .then((result) => {

@@ -31,22 +31,24 @@ mongoose.connect(process.env.DATABASE)
 app.use("/user", userRouter)
 app.use("/user/blog", blogRouter)
 
-app.get('/comments', async (req, res) => {
-    try {
-        // const result = await newUser.find({})
-        const result = await Comments.find({})
-        // const result = await newUser.findByIdAndDelete({ blogs: new mongoose.Types.ObjectId("642d191e569169eb7c5bbe55") }).populate('blogs')
-        if (result) {
-            return res.status(200).json(result)
-        }
-        else {
-            return res.status(400).json({ message: "failed to fetch data" })
-        }
-    }
-    catch {
-        res.status(500).json({ message: "server error" })
-    }
-})
+// app.get('/comments', async (req, res) => {
+//     try {
+//         // const result = await newUser.find({})
+//         const result = await Comments.find({})
+//         // const result = await newUser.findByIdAndDelete({ blogs: new mongoose.Types.ObjectId("642d191e569169eb7c5bbe55") }).populate('blogs')
+//         if (result) {
+//             return res.status(200).json(result)
+//         }
+//         else {
+//             return res.status(400).json({ message: "failed to fetch data" })
+//         }
+//     }
+//     catch {
+//         res.status(500).json({ message: "server error" })
+//     }
+// })
+
+// creating comments 
 app.post('/create-comment', upload.single("image"), async (req, res) => {
     const title = req.body.title
     try {
@@ -67,6 +69,8 @@ app.post('/create-comment', upload.single("image"), async (req, res) => {
     res.send('hello from simple server :)')
 
 })
+
+// storing comments to current blog
 app.post('/store-comment-to-each-blog', async (req, res) => {
     try {
         const product = await Blogs.updateOne({ _id: req.body.blogId }, { $addToSet: { comments: req.body.commentId } });
@@ -81,6 +85,7 @@ app.post('/store-comment-to-each-blog', async (req, res) => {
     }
 })
 
+// getting all blogs from database
 app.get('/', async (req, res) => {
     try {
         // const result = await newUser.find({})
@@ -98,6 +103,7 @@ app.get('/', async (req, res) => {
     }
 })
 
+// single blog details 
 app.get("/:id", async (req, res) => {
     const product = await Blogs.findOne({ _id: req.params.id }).populate("comments");
     try {
