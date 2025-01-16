@@ -32,6 +32,7 @@ blogRouter.post('/create-post', upload.single("image"), async (req, res) => {
 })
 
 blogRouter.post('/store-post-to-each-user', async (req, res) => {
+    console.log("/store-post-to-each-user", req.body)
     try {
         const product = await newUser.updateOne({ _id: req.body.userId }, { $addToSet: { blogs: req.body.blogId } });
 
