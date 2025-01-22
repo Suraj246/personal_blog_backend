@@ -11,7 +11,21 @@ import jwt from "jsonwebtoken";
 import multer from "multer";
 import userRouter from "./routes/userRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
-const upload = multer({ dest: "uploads/" })
+
+
+// Multer middleware for image uploads
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, '/uploads')
+//     },
+//     filename: function (req, file, cb) {
+//         // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+//         cb(null, file.originalname)
+//     }
+// })
+
+// const upload = multer({ storage: storage })
+// const upload = multer({ dest: "uploads/" })
 
 dotenv.config({ path: "./config.env" });
 
@@ -22,10 +36,7 @@ app.use(express.json());
 app.use(cors())
 mongoose.set('strictQuery', true);
 
-mongoose.connect(process.env.DATABASE, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose.connect(process.env.DATABASE)
     .then((res) => console.log('> Database Connected...'.bgCyan))
     .catch(err => console.log(`> Error while connecting to mongoDB : ${err.message}`.underline.bgRed))
 
@@ -61,7 +72,8 @@ app.use("/user/blog", blogRouter)
 // })
 
 // creating comments 
-app.post('/create-comment', upload.single("image"), async (req, res) => {
+
+app.post('/create-comment', async (req, res) => {
     const title = req.body.title
     try {
         if (!title) {

@@ -4,7 +4,31 @@ const blogRouter = express.Router()
 import multer from "multer";
 import newUser from '../schema/userSchema.js';
 import mongoose from 'mongoose';
-const upload = multer({ dest: "uploads/" })
+
+import path from 'path'
+import { fileURLToPath } from 'url';
+
+// Convert import.meta.url to a file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename); // Define __dirname
+
+// accessing the uploads directory
+// console.log("path", path.join(__dirname, '../uploads'))
+
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '../uploads'))
+    },
+    filename: function (req, file, cb) {
+        // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, file.originalname)
+    }
+})
+
+const upload = multer({ storage: storage })
+
+// const upload = multer({ dest: "uploads/" })
 
 blogRouter.post('/create-post', upload.single("image"), async (req, res) => {
     // const { title, image, content } = req.body
