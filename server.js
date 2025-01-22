@@ -21,12 +21,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors())
 mongoose.set('strictQuery', true);
-mongoose.connect(process.env.DATABASE)
+
+mongoose.connect(process.env.DATABASE, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
     .then((res) => console.log('> Database Connected...'.bgCyan))
     .catch(err => console.log(`> Error while connecting to mongoDB : ${err.message}`.underline.bgRed))
 
-
-
+// you will get this error if you remove following code 
+// => Unhandled Rejection: Cast to ObjectId failed for value "favicon.ico" (type string) at path "_id" for model "blogs"
+// Middleware to handle favicon.ico requests
+app.use((req, res, next) => {
+    if (req.originalUrl === '/favicon.ico') {
+        res.status(204).json({ nope: true });
+    } else {
+        next();
+    }
+});
 
 app.use("/user", userRouter)
 app.use("/user/blog", blogRouter)
@@ -85,23 +97,16 @@ app.post('/store-comment-to-each-blog', async (req, res) => {
     }
 })
 
-// getting all blogs from database
+// get all blogs
 app.get('/', async (req, res) => {
     try {
-        // const result = await newUser.find({})
-        const result = await newUser.find({}).populate('blogs')
-        // const result = await newUser.findByIdAndDelete({ blogs: new mongoose.Types.ObjectId("642d191e569169eb7c5bbe55") }).populate('blogs')
-        if (result) {
-            return res.status(200).json(result)
-        }
-        else {
-            return res.status(400).json({ message: "failed to fetch data" })
-        }
+        const result = await newUser.find().populate('blogs');
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error("Server error:", error);
+        return res.status(500).json({ message: "Server error" });
     }
-    catch {
-        res.status(500).json({ message: "server error" })
-    }
-})
+});
 
 // single blog details 
 app.get("/:id", async (req, res) => {
@@ -188,3 +193,18 @@ app.get("/:id", async (req, res) => {
 // })
 
 app.listen(port, () => console.log(`> Server is up and running on port : http://localhost:${port}`.underline.bgMagenta))
+
+
+
+
+
+// How It Works:
+// Catches Unhandled Rejections: Any unhandled promise rejections will be captured here.
+
+// Logs the Error: We log the error message to make debugging easier.
+
+// Exits the Process: By calling process.exit(1), we ensure the application doesn’t continue running in an unstable state after a critical failure.
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled Rejection:', error.message);
+    process.exit(1);
+});
