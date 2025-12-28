@@ -4,7 +4,9 @@ const blogRouter = express.Router()
 import multer from "multer";
 import newUser from '../schema/userSchema.js';
 import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
 
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path'
 // import { fileURLToPath } from 'url';
 
@@ -16,28 +18,46 @@ import path from 'path'
 // console.log("path", path.join(__dirname, '../uploads'))
 
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.resolve('./uploads'))
-        // cb(null, path.join(__dirname, '../uploads'))
-    },
-    filename: function (req, file, cb) {
-        // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, Date.now() + '-' + file.originalname)
-    }
-})
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, path.resolve('./uploads'))
+//         // cb(null, path.join(__dirname, '../uploads'))
+//     },
+//     filename: function (req, file, cb) {
+//         // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+//         cb(null, Date.now() + '-' + file.originalname)
+//     }
+// })
 
-const upload = multer({ storage: storage })
+// const upload = multer({ storage: storage })
 
 // const upload = multer({ dest: "uploads/" })
+cloudinary.config({
+    cloud_name: 'dack5ibxd',
+    api_key: '991389183822816',
+    api_secret: 'k9XfVTSemYZhAtv_MEb8KHZfuqs',
+})
+
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: `image`,
+        format: async (req, file) => 'png', // supports promises as well
+        public_id: (req, file) => file.fieldname + "" + Date.now(),
+    },
+})
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
 blogRouter.post('/create-post', upload.single("image"), async (req, res) => {
     // const { title, image, content } = req.body
+
     const title = req.body.title
-    const image = req.file ? req.file.filename : 'no image'
+    const image = req.file ? req.file.path : 'no image'
     const content = req.body.content
     const category = req.body.category
-
 
     try {
         if (!title || !content) {
@@ -101,10 +121,11 @@ blogRouter.delete('/:id/:product_index', async (req, res) => {
 // blogRouter.put('/update/:id', upload.single("image"), async (req, res) => {
 blogRouter.put('/update/:id', async (req, res) => {
     const { id } = req.params
+    console.log("req.body", req.body)
     // const { title, image, content } = req.body
     const title = req.body.title
     // const image = req.file ? req.file.filename : null
-    const content = req.body.value
+    const content = req.body.content
     try {
         await Blogs.findByIdAndUpdate({ _id: id }, { title: title, content: content }, { new: true })
             .then((result) => {

@@ -30,10 +30,19 @@ import blogRouter from "./routes/blogRoutes.js";
 dotenv.config({ path: "./config.env" });
 
 const app = express()
+app.use(cors())
+
+import uploadRoutes from './routes/upload.routes.js'
+
+app.use('/api', uploadRoutes)
+
+
 app.use('/uploads', express.static('uploads'))
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors())
+
+
+
 mongoose.set('strictQuery', true);
 
 mongoose.connect(process.env.DATABASE)
@@ -50,6 +59,8 @@ app.use((req, res, next) => {
         next();
     }
 });
+
+
 
 app.use("/user", userRouter)
 app.use("/user/blog", blogRouter)
